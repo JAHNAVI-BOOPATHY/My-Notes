@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IGS Notes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="h-screen flex bg-gray-100 font-sans">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-xl border-r p-4 flex flex-col">
+    <h2 class="text-xl font-bold mb-4">My Notes</h2>
+    <div id="notesList" class="space-y-2 flex-1 overflow-y-auto"></div>
+    <button onclick="newNote()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg shadow">
+      + New Note
+    </button>
+  </aside>
+
+  <!-- Main Editor -->
+  <main class="flex-1 flex flex-col">
+    
+    <!-- Toolbar -->
+<div class="bg-white shadow-md flex items-center gap-4 px-5 py-3 border-b rounded-t-2xl">
+
+  <!-- Text formatting -->
+  <div class="flex gap-2">
+    <button class="p-2 rounded-lg hover:bg-gray-100 transition" onclick="format('bold')" title="Bold">
+      <span class="material-icons">format_bold</span>
+    </button>
+    <button class="p-2 rounded-lg hover:bg-gray-100 transition" onclick="format('italic')" title="Italic">
+      <span class="material-icons">format_italic</span>
+    </button>
+    <button class="p-2 rounded-lg hover:bg-gray-100 transition" onclick="format('underline')" title="Underline">
+      <span class="material-icons">format_underlined</span>
+    </button>
+  </div>
+
+  <!-- Alignment -->
+  <div class="flex gap-2 border-l pl-4">
+    <button class="p-2 rounded-lg hover:bg-gray-100 transition" onclick="format('justifyLeft')" title="Align Left">
+      <span class="material-icons">format_align_left</span>
+    </button>
+    <button class="p-2 rounded-lg hover:bg-gray-100 transition" onclick="format('justifyCenter')" title="Align Center">
+      <span class="material-icons">format_align_center</span>
+    </button>
+    <button class="p-2 rounded-lg hover:bg-gray-100 transition" onclick="format('justifyRight')" title="Align Right">
+      <span class="material-icons">format_align_right</span>
+    </button>
+    <button class="p-2 rounded-lg hover:bg-gray-100 transition" onclick="format('justifyFull')" title="Justify">
+      <span class="material-icons">format_align_justify</span>
+    </button>
+  </div>
+
+  <!-- Background color options -->
+  <div class="ml-auto flex gap-2">
+    <div class="w-6 h-6 rounded-full bg-yellow-200 cursor-pointer border hover:scale-110 transition" onclick="setBgColor('#FEF9C3')"></div>
+    <div class="w-6 h-6 rounded-full bg-pink-200 cursor-pointer border hover:scale-110 transition" onclick="setBgColor('#FBCFE8')"></div>
+    <div class="w-6 h-6 rounded-full bg-blue-200 cursor-pointer border hover:scale-110 transition" onclick="setBgColor('#BFDBFE')"></div>
+    <div class="w-6 h-6 rounded-full bg-green-200 cursor-pointer border hover:scale-110 transition" onclick="setBgColor('#BBF7D0')"></div>
+  </div>
+
+  <!-- Save button -->
+  <button onclick="saveNote()" class="ml-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow transition">
+    Save
+  </button>
+  <button onclick="deleteNote()" class="ml-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow">
+  Delete
+</button>
+</div>
+
+
+
+    <!-- Editable Note -->
+    <div id="noteContent" 
+         class="flex-1 p-6 outline-none bg-white m-4 rounded-2xl shadow-xl transition-colors" 
+         contenteditable="true">
+      Start writing your note here...
+    </div>
+  </main>
+
+<script>
+let notes = JSON.parse(localStorage.getItem("notes")) || [];
+let currentNoteIndex = null;
+
+function renderNotes() {
+  const notesList = document.getElementById("notesList");
+  notesList.innerHTML = "";
+  notes.forEach((note, index) => {
+    let div = document.createElement("div");
+    div.className = "p-2 bg-white rounded mb-2 shadow cursor-pointer hover:bg-gray-200";
+    
+    // Fix: Strip HTML tags for preview
+    let tempDiv = document.createElement('div');
+    tempDiv.innerHTML = note.content;
+    let plainText = tempDiv.textContent || tempDiv.innerText || '';
+    
+    div.innerHTML = plainText.substring(0, 40) || "New Note";
+    div.onclick = () => loadNote(index);
+    notesList.appendChild(div);
+  });
+}
+
+function newNote() {
+  currentNoteIndex = null; // reset
+  document.getElementById("noteContent").innerHTML = "Start writing your note here...";
+  document.getElementById("noteContent").style.backgroundColor = "#fff";
+}
+function deleteNote() {
+  if (currentNoteIndex !== null && confirm("Delete this note?")) {
+    notes.splice(currentNoteIndex, 1);
+    localStorage.setItem("notes", JSON.stringify(notes));
+    newNote();
+    renderNotes();
+  }
+}
+
+function saveNote() {
+  let content = document.getElementById("noteContent").innerHTML;
+  let bg = document.getElementById("noteContent").style.backgroundColor || "#fff";
+
+  if (currentNoteIndex === null) {
+    notes.push({ content, bg });
+    currentNoteIndex = notes.length - 1;
+  } else {
+    notes[currentNoteIndex] = { content, bg };
+  }
+
+  localStorage.setItem("notes", JSON.stringify(notes));
+  renderNotes();
+}
+
+function loadNote(index) {
+  document.getElementById("noteContent").innerHTML = notes[index].content;
+  document.getElementById("noteContent").style.backgroundColor = notes[index].bg;
+  currentNoteIndex = index;
+}
+
+function format(command) {
+  document.execCommand(command, false, null);
+}
+
+function setBgColor(color) {
+  document.getElementById("noteContent").style.background = color;
+}
+
+// Initial load
+renderNotes();
+
+</script>
+
+</body>
+</html>
